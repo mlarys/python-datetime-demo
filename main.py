@@ -1,10 +1,28 @@
 
 from datetime import datetime
 from pathlib import Path
+from threading import Event
+import signal
 
 log_file = Path(__file__).resolve().parent / "execution.log"
 
-with log_file.open("a", encoding="utf-8") as f:
-    f.write(f"Executed at: {datetime.now().astimezone().isoformat()}\n")
+stop_event = Event()
 
-print("Execution logged successfully.")
+def shutdown(signum, frame):
+    print("Shutdown requested...")
+    stop_event.set()
+
+signal.signal(signal.SIGTERM, shutdown)
+signal.signal(signal.SIGINT, shutdown)
+
+print("Python service started.")
+
+while not stop_event.is_set():
+    with log_file.open("a", encoding="utf-8") as f:
+        f.write(f"Executed at: {datetime.now().astimezone().isoformat()}\n")
+
+    print("Execution logged successfully.", flush=True)
+
+    stop_event.wait(10)
+
+print("Python service stopped gracefully.")
