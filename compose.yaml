@@ -1,0 +1,10 @@
+
+services:
+  datetime-demo:
+    build: .
+    image: python-datetime-demo:2.0
+    container_name: datetime-demo
+    restart: unless-stopped
+
+    volumes:
+      - ./config.ini:/app/config.ini:ro
