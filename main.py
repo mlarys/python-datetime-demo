@@ -1,31 +1,42 @@
 
-from datetime import datetime
+import signal
 from pathlib import Path
 from threading import Event
-import signal
+
+import pendulum
 
 log_file = Path(__file__).resolve().parent / "execution.log"
 stop_event = Event()
 
+
 def shutdown(signum, frame):
-    print("Shutdown requested...")
+    print("Shutdown requested...", flush=True)
     stop_event.set()
+
 
 signal.signal(signal.SIGTERM, shutdown)
 signal.signal(signal.SIGINT, shutdown)
 
-print("Python service started.")
+print("Python datetime service started.", flush=True)
 
 while not stop_event.is_set():
-    current_time = datetime.now().astimezone().isoformat()
+    now = pendulum.now("UTC")
 
-    # Display datetime in terminal
-    print(f"Current datetime: {current_time}", flush=True)
+    utc_time = now.format("YYYY-MM-DD HH:mm:ss")
+    dubai_time = now.in_timezone("Asia/Dubai").format("YYYY-MM-DD HH:mm:ss")
+    tokyo_time = now.in_timezone("Asia/Tokyo").format("YYYY-MM-DD HH:mm:ss")
 
-    # Append datetime to log file
+    message = (
+        f"UTC: {utc_time} | "
+        f"Dubai: {dubai_time} | "
+        f"Tokyo: {tokyo_time}"
+    )
+
+    print(message, flush=True)
+
     with log_file.open("a", encoding="utf-8") as f:
-        f.write(f"Executed at: {current_time}\n")
+        f.write(message + "\n")
 
     stop_event.wait(10)
 
-print("Python service stopped gracefully.")
+print("Python datetime service stopped gracefully.", flush=True)
